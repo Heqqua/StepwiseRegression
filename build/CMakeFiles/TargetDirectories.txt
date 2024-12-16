@@ -1,3 +1,0 @@
-/home/Hequa/project/build/CMakeFiles/StepwiseRegression.dir
-/home/Hequa/project/build/CMakeFiles/edit_cache.dir
-/home/Hequa/project/build/CMakeFiles/rebuild_cache.dir
