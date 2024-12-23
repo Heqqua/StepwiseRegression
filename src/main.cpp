@@ -1,5 +1,9 @@
 #include <wx/wx.h>
+#include <wx/tokenzr.h>
+#include <wx/log.h>
 #include "regression.h"
+#include <iostream>
+
 
 class MyApp : public wxApp {
 public:
@@ -20,21 +24,28 @@ private:
 
 void MyFrame::OnCalculate(wxCommandEvent& event)
 {
+    wxLogDebug(L"Начало вычислений.");
+    // std::cout << "Начало вычислений.\n";
+
     try {
-        // Получение текста из полей ввода
         wxString inputXStr = inputX->GetValue();
         wxString inputYStr = inputY->GetValue();
+        // wxLogDebug("Получены данные: X = %s, Y = %s", inputXStr, inputYStr);
 
         // Разделение строк на числа
         std::vector<double> x, y;
-        wxArrayString xArray = wxStringTokenize(inputXStr, ",");
-        wxArrayString yArray = wxStringTokenize(inputYStr, ",");
-
-        for (const auto& val : xArray) {
-            x.push_back(wxAtof(val));
+        wxStringTokenizer tokenizerX(inputXStr, ",");
+        while (tokenizerX.HasMoreTokens()) {
+            wxString token = tokenizerX.GetNextToken();
+            // wxLogDebug("Обрабатываем X-значение: %s", token);
+            x.push_back(wxAtof(token));
         }
-        for (const auto& val : yArray) {
-            y.push_back(wxAtof(val));
+
+        wxStringTokenizer tokenizerY(inputYStr, ",");
+        while (tokenizerY.HasMoreTokens()) {
+            wxString token = tokenizerY.GetNextToken();
+            // wxLogDebug("Обрабатываем Y-значение: %s", token);
+            y.push_back(wxAtof(token));
         }
 
         // Проверка длины массивов
@@ -42,28 +53,46 @@ void MyFrame::OnCalculate(wxCommandEvent& event)
             throw std::runtime_error("Количество элементов X и Y должно совпадать.");
         }
 
+        // wxLogDebug("Размеры массивов совпадают: X = %d, Y = %d", x.size(), y.size());
+
         // Выполнение регрессии
-        int M = 2; // Степень полинома, можно сделать параметром
+        int M = 2; // Степень полинома
         std::vector<double> coefficients = performRegression(x, y, M);
 
+        // wxLogDebug("Регрессия выполнена, коэффициенты получены.");
+
+        std::cout << coefficients.size() << std::endl;
+
         // Формирование результата
-        wxString result = "Результаты регрессии:\n";
+        wxString result;
+        result = wxString(L"Результаты регрессии:\n", wxConvLibc);
+        std::cout << result.ToAscii() << std::endl;
         for (size_t i = 0; i < coefficients.size(); ++i) {
-            result += wxString::Format("Коэффициент при x^%d: %.5f\n", i, coefficients[i]);
+            std::cout << coefficients[i] << std::endl;
+            result += wxString::Format(L"Коэффициент при x^%d: %.5lf\n", static_cast<int>(i), coefficients[i]);
+            // result = wxString::Format(L"Коэффициент при %d  %f\n", 1, 1.2);
+            // wxLogDebug("Коэффициент %d: %.5lf", static_cast<int>(i), coefficients[i]);
         }
 
-        // Отображение результата
+        std::cout << result << std::endl;
+
         output->SetValue(result);
     }
     catch (const std::exception& e) {
-        wxMessageBox(wxString::Format("Ошибка: %s", e.what()), "Ошибка", wxOK | wxICON_ERROR);
+        // wxMessageBox(wxString::Format("Ошибка: %s", e.what()), "Ошибка", wxOK | wxICON_ERROR);
+        // wxLogError("Ошибка: %s", e.what());
+        std::cerr << "Ошибка: " << e.what() << std::endl;
     }
+
 }
 
 
+
 bool MyApp::OnInit() {
+    wxLog::SetActiveTarget(new wxLogStderr); // Включаем вывод отладочных сообщений в консоль
     MyFrame* frame = new MyFrame("Степенная регрессия");
     frame->Show(true);
+
     return true;
 }
 
@@ -85,7 +114,7 @@ MyFrame::MyFrame(const wxString& title)
     sizer->Add(button, 0, wxALL | wxCENTER, 5);
     sizer->Add(output, 1, wxALL | wxEXPAND, 5);
 
-    panel->SetSizer(sizer);  // Добавлено для корректного отображения
+    panel->SetSizer(sizer);
 }
 
 wxIMPLEMENT_APP(MyApp);

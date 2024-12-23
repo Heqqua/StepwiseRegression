@@ -9,7 +9,7 @@ Matrix umat(const Matrix& A, const Matrix& B) {
     size_t p = B.size();
 
     if (A[0].size() != p) {
-        throw std::invalid_argument("Matrix dimensions do not match for multiplication.");
+        throw std::invalid_argument("Матрицы не совпадают по размерности");
     }
 
     Matrix result(n, std::vector<double>(m, 0));
@@ -23,7 +23,6 @@ Matrix umat(const Matrix& A, const Matrix& B) {
     return result;
 }
 
-// Обращение матрицы методом Гаусса
 Matrix omat(const Matrix& A) {
     size_t n = A.size();
     Matrix augmented = A;
@@ -37,7 +36,18 @@ Matrix omat(const Matrix& A) {
     // Прямой ход Гаусса
     for (size_t i = 0; i < n; ++i) {
         if (augmented[i][i] == 0) {
-            throw std::invalid_argument("Matrix is singular and cannot be inverted.");
+            // Попробуйте обменять строки
+            bool swapped = false;
+            for (size_t j = i + 1; j < n; ++j) {
+                if (augmented[j][i] != 0) {
+                    std::swap(augmented[i], augmented[j]);
+                    swapped = true;
+                    break;
+                }
+            }
+            if (!swapped) {
+                throw std::invalid_argument("Единичная матрица не может быть обращена");
+            }
         }
 
         for (size_t j = i + 1; j < n; ++j) {
@@ -49,7 +59,7 @@ Matrix omat(const Matrix& A) {
     }
 
     // Обратный ход Гаусса
-    for (size_t i = n - 1; i < n; --i) {
+    for (size_t i = n - 1; i != static_cast<size_t>(-1); --i) {
         double divisor = augmented[i][i];
         for (size_t j = 0; j < 2 * n; ++j) {
             augmented[i][j] /= divisor;
@@ -73,4 +83,5 @@ Matrix omat(const Matrix& A) {
 
     return inverse;
 }
+
 
